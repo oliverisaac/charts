@@ -71,7 +71,7 @@ servers:
 #  servers:
 #    plugins:
 #    - name: kubernetes
-#      parameters: primary.local 
+#      parameters: primary.local
 #      configBlock: |-
 #        endpoint https://1.2.3.4
 
@@ -119,4 +119,3 @@ zoneFiles: []
 #      *.example.com. IN A   192.168.99.102
 #
 #
-
