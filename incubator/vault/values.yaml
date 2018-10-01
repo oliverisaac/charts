@@ -24,6 +24,10 @@ consulAgent:
   #
   # Optionally override the agent's http port
   HttpPort: 8500
+  
+  # List of key/value pairs to pass as flags
+  options: {}
+  # dc: us-central1
 service:
   name: vault
   type: ClusterIP

@@ -115,6 +115,7 @@ spec:
               $GOSSIP_KEY \
               -join={{- .Values.consulAgent.join }} \
               -data-dir=/etc/consul
+              {{- range $flag, $value := .Values.ConsulAgent.options }} -{{ $flag }}='{{$value}}' {{- end }}
       {{- end }}
       affinity:
 {{ tpl .Values.affinity . | indent 8 }}
