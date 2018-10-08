@@ -73,7 +73,7 @@ if ! [[ -z $script ]]; then
         pipe_target="$script"
     elif [[ -e "$script" ]]; then
         echo "The script you want to pipe results to is not executable! Going to run it as a bash script." >&2
-        pipe_target=( "bash" "$script" )
+        pipe_target=( "bash" "-x" "$script" )
     else
         echo "The script you watn to pipe results to ( $script ) does not exist!" >&2
         exit 12

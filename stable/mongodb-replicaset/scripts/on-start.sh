@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -x
 # Copyright 2018 The Kubernetes Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,19 +50,22 @@ shutdown_mongo() {
 my_hostname=$(hostname)
 if [[ ${MONGO_FQDN:-} != "" ]]; then
     my_hostname="${my_hostname}.${MONGO_FQDN}"
-    service_name="${my_hostname}"
+    my_fqdn="${my_hostname}"
 fi
 
-log "Bootstrapping MongoDB replica set member: $my_hostname"
+log "Bootstrapping MongoDB replica set member: $my_fqdn"
 
 log "Reading standard input..."
 while read -ra line; do
-    if [[ $service_name == "" ]] && [[ "${line}" == *"${my_hostname}"* ]]; then
-        service_name="$line"
+    if [[ $my_fqdn == "" ]] && [[ "${line}" == *"${my_hostname}"* ]]; then
+        my_fqdn="$line"
         continue
     fi
     peers=("${peers[@]}" "$line")
 done
+
+service_fqdn=${my_fqdn#*.}
+public_servie_fqdn=$( echo "$service_fqdn" | cut -d. -f1 )-public.$( echo "$service_fqdn" | cut -d. -f2- )
 
 # Generate the ca cert
 ca_crt=/data/configdb/tls.crt
@@ -70,6 +74,20 @@ if [ -f "$ca_crt"  ]; then
     ca_key=/data/configdb/tls.key
     pem=/work-dir/mongo.pem
     ssl_args=(--ssl --sslCAFile "$ca_crt" --sslPEMKeyFile "$pem")
+
+    # Sample fqdn: mongodb-1.service.namespace.svc.cluster.local
+    hostnames_to_add=( 
+        $(echo -n "$my_fqdn" | cut -d. -f1 )        # Short hostname: mongodb-1
+        $(echo -n "$my_fqdn" | cut -d. -f1-2 )      # Hostname and service: mongodb-1.service
+        $(echo -n "$my_fqdn" | cut -d. -f1-3 )      # namespace localized: mongodb-1.service.namespace
+        $my_fqdn                                    # Full fqdn: mongodb-1.service.namespace.svc.cluster.local
+        $(echo -n "$service_fqdn" | cut -d. -f1 )   # Just service: service
+        $(echo -n "$service_fqdn" | cut -d. -f1-2 ) # Namespace localized: service.namespace
+        $service_fqdn                               # Full service: service.namespace.svc.cluster.local
+        ${PUBLIC_HOSTNAME:-}                        # Public hostname as given in values.yaml
+        localhost
+        127.0.0.1
+    )
 
 # Move into /work-dir
 pushd /work-dir
@@ -84,16 +102,12 @@ basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = $(echo -n "$my_hostname" | sed s/-[0-9]*$//)
-DNS.2 = $my_hostname
-DNS.3 = $service_name
-DNS.4 = localhost
-DNS.5 = 127.0.0.1
+$( for h in ${hostnames_to_add[@]}; do printf "DNS.%d = %s\n" $(( ++i )) $h; done )
 EOL
 
     # Generate the certs
     openssl genrsa -out mongo.key 2048
-    openssl req -new -key mongo.key -out mongo.csr -subj "/CN=$my_hostname" -config openssl.cnf
+    openssl req -new -key mongo.key -out mongo.csr -subj "/CN=${my_fqdn%%.*}" -config openssl.cnf
     openssl x509 -req -in mongo.csr \
         -CA "$ca_crt" -CAkey "$ca_key" -CAcreateserial \
         -out mongo.crt -days 3650 -extensions v3_req -extfile openssl.cnf
@@ -121,8 +135,8 @@ log "Initialized."
 for peer in "${peers[@]}"; do
     if mongo admin --host "$peer" "${admin_creds[@]}" "${ssl_args[@]}" --eval "rs.isMaster()" | grep '"ismaster" : true'; then
         log "Found master: $peer"
-        log "Adding myself ($service_name) to replica set..."
-        mongo admin --host "$peer" "${admin_creds[@]}" "${ssl_args[@]}" --eval "rs.add('$service_name')"
+        log "Adding myself ($my_fqdn) to replica set..."
+        mongo admin --host "$peer" "${admin_creds[@]}" "${ssl_args[@]}" --eval "rs.add('$my_fqdn')"
 
         sleep 3
 
@@ -152,8 +166,8 @@ done
 
 # else initiate a replica set with yourself.
 if mongo "${ssl_args[@]}" --eval "rs.status()" | grep "no replset config has been received"; then
-    log "Initiating a new replica set with myself ($service_name)..."
-    mongo "${ssl_args[@]}" --eval "rs.initiate({'_id': '$replica_set', 'members': [{'_id': 0, 'host': '$service_name'}]})"
+    log "Initiating a new replica set with myself ($my_fqdn)..."
+    mongo "${ssl_args[@]}" --eval "rs.initiate({'_id': '$replica_set', 'members': [{'_id': 0, 'host': '$my_fqdn'}]})"
 
     sleep 3
 
