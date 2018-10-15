@@ -108,7 +108,11 @@ spec:
             - name: PUBLIC_HOSTNAME
               value: {{ .Values.service.public.hostname }}
             - name: MONGO_FQDN
+              {{- if .Values.clusterFQDN }}
+              value: {{ .Values.clusterFQDN }}
+              {{- else }}
               value: {{ template "mongodb-replicaset.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}
+              {{- end }}
           {{- if .Values.auth.enabled }}
             - name: AUTH
               value: "true"

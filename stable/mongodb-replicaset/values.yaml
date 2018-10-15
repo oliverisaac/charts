@@ -133,5 +133,5 @@ livenessProbe:
   periodSeconds: 10
   successThreshold: 1
 
-joinFQDN: "cluster.local"
-clusterDomain: "cluster.local"
+joinFQDN: "mongodb-replicaset.mongodb.svc.cluster.local"
+clusterFQDN: "mongodb-replicaset.mongodb.svc.cluster.local"
