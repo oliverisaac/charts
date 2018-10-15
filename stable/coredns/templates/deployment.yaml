@@ -11,16 +11,18 @@ metadata:
     kubernetes.io/cluster-service: "true"
     kubernetes.io/name: "CoreDNS"
     {{- end }}
-    app: {{ template "coredns.name" . }}
+    app: "{{ template "coredns.name" . }}"
 spec:
   replicas: {{ .Values.replicaCount }}
+  {{- if false }}
   selector:
     matchLabels:
       release: {{ .Release.Name | quote }}
       {{- if .Values.isClusterService }}
       k8s-app: {{ .Chart.Name | quote }}
       {{- end }}
-      app: {{ template "coredns.name" . }}
+      app: {{ template "coredns.fullname" . }}
+  {{- end }}
   template:
     metadata:
       labels:

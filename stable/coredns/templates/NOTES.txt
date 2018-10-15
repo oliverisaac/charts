@@ -11,7 +11,7 @@ It can be accessed using the below endpoint
   NOTE: It may take a few minutes for the LoadBalancer IP to be available.
         You can watch the status by running 'kubectl get svc -w {{ template "coredns.fullname" . }}'
 
-{{- if contains "UDPNTCP" .Values.serviceProtocol }}
+{{- if and .Values.serviceProtocol ( contains "UDPNTCP" .Values.serviceProtocol ) }}
   NOTE: Some cloud environments cannot create external loadbalancers with both "TCP" and "UDP" protocols.
         So in case of error, use either "UDP" or "TCP" protocol by setting `serviceProtocol` parameter.
 {{- end }}
