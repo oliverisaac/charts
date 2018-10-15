@@ -11,4 +11,3 @@
     POD_NAME must be replaced by the name of the pod being queried.
 
     $ kubectl exec --namespace {{ .Release.Namespace }} POD_NAME -- mongo --eval="rs.slaveOk(); db.test.find().forEach(printjson)"
-

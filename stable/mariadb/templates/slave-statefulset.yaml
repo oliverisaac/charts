@@ -34,8 +34,8 @@ spec:
         chart: {{ template "mariadb.chart" . }}
     spec:
       securityContext:
-        runAsUser: 1001
-        fsGroup: 1001
+        runAsUser: 0
+        fsGroup: 0
       {{- if eq .Values.slave.antiAffinity "hard" }}
       affinity:
       {{- with .Values.slave.affinity  }}

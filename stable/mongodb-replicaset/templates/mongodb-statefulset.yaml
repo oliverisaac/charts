@@ -85,10 +85,17 @@ spec:
         - name: bootstrap
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           command:
-            - /work-dir/peer-finder
+            - bash 
           args:
-            - -on-start=/init/on-start.sh
-            - "-service={{ template "mongodb-replicaset.fullname" . }}"
+            - "-x"
+            - /scripts/peer-finder-bash
+            - --script=/scripts/on-start.sh
+            {{- if .Values.joinFQDN }}
+            - '--fqdn={{ .Values.joinFQDN }}'
+            {{- else }}
+            - '--service={{ template "mongodb-replicaset.fullname" . }}'
+            - "--ns={{ .Release.Namespace }}"
+            {{- end }}
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           env:
             - name: POD_NAMESPACE
@@ -98,6 +105,14 @@ spec:
                   fieldPath: metadata.namespace
             - name: REPLICA_SET
               value: {{ .Values.replicaSetName }}
+            - name: PUBLIC_HOSTNAME
+              value: {{ .Values.service.public.hostname }}
+            - name: MONGO_FQDN
+              {{- if .Values.clusterFQDN }}
+              value: {{ .Values.clusterFQDN }}
+              {{- else }}
+              value: {{ template "mongodb-replicaset.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}
+              {{- end }}
           {{- if .Values.auth.enabled }}
             - name: AUTH
               value: "true"
@@ -129,6 +144,8 @@ spec:
           volumeMounts:
             - name: workdir
               mountPath: /work-dir
+            - name: scripts
+              mountPath: /scripts
             - name: init
               mountPath: /init
             - name: configdir
@@ -291,6 +308,9 @@ spec:
         - name: config
           configMap:
             name: {{ template "mongodb-replicaset.fullname" . }}-mongodb
+        - name: scripts
+          configMap:
+            name: {{ template "mongodb-replicaset.fullname" . }}-scripts
         - name: init
           configMap:
             defaultMode: 0755

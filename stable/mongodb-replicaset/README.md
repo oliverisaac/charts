@@ -71,7 +71,8 @@ The following table lists the configurable parameters of the mongodb chart and t
 | `auth.metricsUser`                  | MongoDB clusterMonitor user                                               | ``                                                  |
 | `auth.metricsPassword`              | MongoDB clusterMonitor password                                           | ``                                                  |
 | `auth.existingAdminSecret`          | If set, and existing secret with this name is used for the admin user     | ``                                                  |
-| `serviceAnnotations`                | Annotations to be added to the service                                    | `{}`                                                |
+| `service.type`                      | Service type to use                                                       | `{}`                                                |
+| `service.annotations`               | Annotations to be added to the service                                    | `{}`                                                |
 | `configmap`                         | Content of the MongoDB config file                                        | ``                                                  |
 | `nodeSelector`                      | Node labels for pod assignment                                            | `{}`                                                |
 | `affinity`                          | Node/pod affinities                                                       | `{}`                                                |

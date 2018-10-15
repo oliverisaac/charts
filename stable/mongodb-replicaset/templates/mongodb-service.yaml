@@ -4,8 +4,8 @@ kind: Service
 metadata:
   annotations:
     service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-  {{- if .Values.serviceAnnotations }}
-{{ toYaml .Values.serviceAnnotations | indent 4 }}
+  {{- if .Values.service.annotations }}
+{{ toYaml .Values.service.annotations | indent 4 }}
   {{- end }}
   labels:
     app: {{ template "mongodb-replicaset.name" . }}
@@ -19,6 +19,7 @@ metadata:
 spec:
   type: ClusterIP
   clusterIP: None
+  publishNotReadyAddresses: true
   ports:
     - name: mongodb
       port: {{ .Values.port }}
@@ -30,3 +31,38 @@ spec:
   selector:
     app: {{ template "mongodb-replicaset.name" . }}
     release: {{ .Release.Name }}
+{{- if .Values.service.public.create }}
+---
+# A public service to let you hit the db from outside the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  {{- if .Values.service.public.annotations }}
+{{ toYaml .Values.service.public.annotations | indent 4 }}
+  {{- end }}
+  labels:
+    app: {{ template "mongodb-replicaset.name" . }}
+    chart: {{ template "mongodb-replicaset.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+{{- if .Values.extraLabels }}
+{{ toYaml .Values.extraLabels | indent 4 }}
+{{- end }}
+  name: {{ template "mongodb-replicaset.fullname" . }}-public
+spec:
+  type: {{ .Values.service.public.type }}
+  loadBalancerIP: {{ .Values.service.public.loadBalancerIP }}
+  clusterIP: {{ .Values.service.public.clusterIP }}
+  ports:
+    - name: mongodb
+      port: {{ .Values.port }}
+{{- if .Values.metrics.enabled }}
+    - name: metrics
+      port: {{ .Values.metrics.port }}
+      targetPort: metrics
+{{- end }}
+  selector:
+    app: {{ template "mongodb-replicaset.name" . }}
+    release: {{ .Release.Name }}
+{{- end }}

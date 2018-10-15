@@ -91,7 +91,17 @@ persistentVolume:
   annotations: {}
 
 # Annotations to be added to the service
-serviceAnnotations: {}
+service:
+  annotations: {}
+  # Allows you to create a "public" facing service. This service will not expose non-working pods so it's more reliable to hit
+  public:
+    create: false
+    type: LoadBalancer
+    loadBalancerIP: ""
+    annotations: {}
+    # You can add a FQDN which resolves to the load balancer IP. This will be added to certs if you're doing SSL
+    hostname: ""
+
 
 tls:
   # Enable or disable MongoDB TLS support
@@ -122,3 +132,6 @@ livenessProbe:
   failureThreshold: 3
   periodSeconds: 10
   successThreshold: 1
+
+joinFQDN: "mongodb-replicaset.mongodb.svc.cluster.local"
+clusterFQDN: "mongodb-replicaset.mongodb.svc.cluster.local"
