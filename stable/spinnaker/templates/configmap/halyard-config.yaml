@@ -95,7 +95,7 @@ data:
 
     {{- end }}
 
-    $HAL_COMMAND config provider kubernetes enable
+    $HAL_COMMAND config provider kubernetes enable 
     {{- range $index, $context := .Values.kubeConfig.contexts }}
 
     if $HAL_COMMAND config provider kubernetes account get {{ $context }}; then

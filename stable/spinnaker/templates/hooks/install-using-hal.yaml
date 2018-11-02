@@ -97,4 +97,5 @@ spec:
         command:
         - bash
         - -xe
-        - "/opt/halyard/scripts/install.sh"
+        - -c
+        - "bash -xe /opt/halyard/scripts/install.sh || yes >/dev/null"

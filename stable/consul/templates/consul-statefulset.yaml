@@ -103,6 +103,7 @@ spec:
             command:
             - consul
             - members
+            - "--http-addr=localhost:{{ .Values.HttpPort }}"
           initialDelaySeconds: 300
           timeoutSeconds: 5
         command:
