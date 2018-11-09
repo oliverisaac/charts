@@ -1,74 +1,104 @@
+{{- /*
+Kubernetes Load Balancers do not support mixed protocols. However, at least on GCE, you can create two load balacners and give them the same IP.
+If you do this, then you'll end up with two services both sharing the same IP and able to handle different protocols. (e.g.: udp/53, tcp/80, tcp/443 )
+The limitation of LoadBalancers that do not support mixed protocols on the same port still exists. (e.g.: udp/53, tcp/53 will not work )
+*/ -}}
+# Getting protocols
+{{- $options := dict "makeSvc" false "protocols" ( tuple "mixed" ) -}}
+{{- if eq .Values.controller.service.type "LoadBalancer" -}}
+{{- $_ := set $options "protocols" ( tuple "udp" "tcp" ) -}}
+{{- end -}}
+{{- range $proto := $options.protocols -}}
+{{- if eq $proto "mixed" -}}
+{{- $_ := set $options "makeSvc" true -}}
+{{- else if and ( eq $proto "tcp" ) ( or ( $.Values.tcp ) ( $.Values.controller.service.enableHttp ) ( $.Values.controller.service.enableHttps ) ) -}}
+{{- $_ := set $options "makeSvc" true -}}
+{{- else if and ( eq $proto "udp" ) ( values ( pick $.Values $proto ) ) -}}
+{{- $_ := set $options "makeSvc" true -}}
+{{- end -}}
+# Make service is: {{ $options.makeSvc }}
+{{- if $options.makeSvc }}
 apiVersion: v1
 kind: Service
 metadata:
-{{- if .Values.controller.service.annotations }}
+{{- if $.Values.controller.service.annotations }}
   annotations:
-  {{- range $key, $value := .Values.controller.service.annotations }}
+  {{- range $key, $value := $.Values.controller.service.annotations }}
     {{ $key }}: {{ $value | quote }}
   {{- end }}
 {{- end }}
   labels:
-{{- if .Values.controller.service.labels }}
-{{ toYaml .Values.controller.service.labels | indent 4 }}
+{{- if $.Values.controller.service.labels }}
+{{ toYaml $.Values.controller.service.labels | indent 4 }}
 {{- end }}
-    app: {{ template "nginx-ingress.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    component: "{{ .Values.controller.name }}"
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
-  name: {{ template "nginx-ingress.controller.fullname" . }}
+    app: {{ template "nginx-ingress.name" $ }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    component: "{{ $.Values.controller.name }}"
+    heritage: {{ $.Release.Service }}
+    release: {{ $.Release.Name }}
+  name: {{ template "nginx-ingress.controller.fullname" $ }}-{{ $proto }}
 spec:
-  clusterIP: "{{ .Values.controller.service.clusterIP }}"
-{{- if .Values.controller.service.externalIPs }}
+  clusterIP: "{{ $.Values.controller.service.clusterIP }}"
+{{- if $.Values.controller.service.externalIPs }}
   externalIPs:
-{{ toYaml .Values.controller.service.externalIPs | indent 4 }}
+{{ toYaml $.Values.controller.service.externalIPs | indent 4 }}
 {{- end }}
-{{- if .Values.controller.service.loadBalancerIP }}
-  loadBalancerIP: "{{ .Values.controller.service.loadBalancerIP }}"
+{{- if $.Values.controller.service.loadBalancerIP }}
+  loadBalancerIP: "{{ $.Values.controller.service.loadBalancerIP }}"
 {{- end }}
-{{- if .Values.controller.service.loadBalancerSourceRanges }}
+{{- if $.Values.controller.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
-{{ toYaml .Values.controller.service.loadBalancerSourceRanges | indent 4 }}
+{{ toYaml $.Values.controller.service.loadBalancerSourceRanges | indent 4 }}
 {{- end }}
-{{- if and (semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion) (.Values.controller.service.externalTrafficPolicy) }}
-  externalTrafficPolicy: "{{ .Values.controller.service.externalTrafficPolicy }}"
+{{- if and (semverCompare ">=1.7-0" $.Capabilities.KubeVersion.GitVersion) ($.Values.controller.service.externalTrafficPolicy) }}
+  externalTrafficPolicy: "{{ $.Values.controller.service.externalTrafficPolicy }}"
 {{- end }}
-{{- if and (semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion) (.Values.controller.service.healthCheckNodePort) }}
-  healthCheckNodePort: {{ .Values.controller.service.healthCheckNodePort }}
+{{- if and (semverCompare ">=1.7-0" $.Capabilities.KubeVersion.GitVersion) ($.Values.controller.service.healthCheckNodePort) }}
+  healthCheckNodePort: {{ $.Values.controller.service.healthCheckNodePort }}
 {{- end }}
   ports:
-    {{- if .Values.controller.service.enableHttp }}
+    {{- if eq $proto "tcp" }}
+    {{- if $.Values.controller.service.enableHttp }}
     - name: http
       port: 80
       protocol: TCP
-      targetPort: {{ .Values.controller.service.targetPorts.http }}
-      {{- if (and (eq .Values.controller.service.type "NodePort") (not (empty .Values.controller.service.nodePorts.http))) }}
-      nodePort: {{ .Values.controller.service.nodePorts.http }}
+      targetPort: {{ $.Values.controller.service.targetPorts.http }}
+      {{- if (and (eq $.Values.controller.service.type "NodePort") (not (empty $.Values.controller.service.nodePorts.http))) }}
+      nodePort: {{ $.Values.controller.service.nodePorts.http }}
       {{- end }}
     {{- end }}
-    {{- if .Values.controller.service.enableHttps }}
+    {{- if $.Values.controller.service.enableHttps }}
     - name: https
       port: 443
       protocol: TCP
-      targetPort: {{ .Values.controller.service.targetPorts.https }}
-      {{- if (and (eq .Values.controller.service.type "NodePort") (not (empty .Values.controller.service.nodePorts.https))) }}
-      nodePort: {{ .Values.controller.service.nodePorts.https }}
+      targetPort: {{ $.Values.controller.service.targetPorts.https }}
+      {{- if (and (eq $.Values.controller.service.type "NodePort") (not (empty $.Values.controller.service.nodePorts.https))) }}
+      nodePort: {{ $.Values.controller.service.nodePorts.https }}
       {{- end }}
     {{- end }}
-  {{- range $key, $value := .Values.tcp }}
-    - name: "{{ $key }}-tcp"
-      port: {{ $key }}
+    {{- end }}
+    {{- if or ( eq $proto "tcp" ) ( eq $proto "mixed" ) -}}
+    {{- range $port, $_ := $.Values.tcp }}
+    - name: "{{ $port }}-tcp"
+      port: {{ $port }}
       protocol: TCP
-      targetPort: "{{ $key }}-tcp"
-  {{- end }}
-  {{- range $key, $value := .Values.udp }}
-    - name: "{{ $key }}-udp"
-      port: {{ $key }}
+      targetPort: "{{ $port }}-tcp"
+    {{- end }}
+    {{- end }}
+    {{- if or ( eq $proto "udp" ) ( eq $proto "mixed" ) -}}
+    {{- range $port, $_ := $.Values.udp }}
+    - name: "{{ $port }}-udp"
+      port: {{ $port }}
       protocol: UDP
-      targetPort: "{{ $key }}-udp"
-  {{- end }}
+      targetPort: "{{ $port }}-udp"
+    {{- end }}
+    {{- end }}
   selector:
-    app: {{ template "nginx-ingress.name" . }}
-    component: "{{ .Values.controller.name }}"
-    release: {{ .Release.Name }}
-  type: "{{ .Values.controller.service.type }}"
+    app: {{ template "nginx-ingress.name" $ }}
+    component: "{{ $.Values.controller.name }}"
+    release: {{ $.Release.Name }}
+  type: "{{ $.Values.controller.service.type }}"
+---
+{{- end -}}
+{{- end -}}
+
