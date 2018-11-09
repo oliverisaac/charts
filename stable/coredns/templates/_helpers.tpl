@@ -21,6 +21,8 @@ Generate the list of ports automatically from the server definitions
 {{- define "coredns.servicePorts" -}}
     {{/* Set ports to be an empty dict */}}
     {{- $ports := dict -}}
+    {{- $serviceType := .Values.service.type -}}
+    {{- $serviceProto := .Values.service.protocol -}}
     {{/* Iterate through each of the server blocks */}}
     {{- range .Values.servers -}}
         {{/* Capture port to avoid scoping awkwardness */}}
@@ -42,6 +44,7 @@ Generate the list of ports automatically from the server definitions
         {{- range .zones -}}
             {{- if has (default "" .scheme) (list "dns://") -}}
                 {{- $innerdict := set $innerdict "isudp" true -}}
+                {{- $innerdict := set $innerdict "istcp" true -}}
             {{- end -}}
 
             {{- if has (default "" .scheme) (list "tls://" "grpc://") -}}
@@ -52,6 +55,7 @@ Generate the list of ports automatically from the server definitions
         {{/* If none of the zones specify scheme, default to UDP (CoreDNS defaults to dns://) */}}
         {{- if and (not (index $innerdict "istcp")) (not (index $innerdict "isudp")) -}}
             {{- $innerdict := set $innerdict "isudp" true -}}
+            {{- $innerdict := set $innerdict "istcp" true -}}
         {{- end -}}
 
         {{/* Write the dict back into the outer dict */}}
@@ -60,11 +64,11 @@ Generate the list of ports automatically from the server definitions
 
     {{/* Write out the ports according to the info collected above */}}
     {{- range $port, $innerdict := $ports -}}
-        {{- if index $innerdict "isudp" -}}
-            {{- printf "- {port: %v, protocol: UDP}\n" $port -}}
+        {{- if and ( index $innerdict "isudp" ) ( or ( ne $serviceType "LoadBalancer" ) ( eq $serviceProto "UDP" ) ) -}}
+            {{- printf "- {port: %v, protocol: UDP, name: udp-dns }\n" $port -}}
         {{- end -}}
-        {{- if index $innerdict "istcp" -}}
-            {{- printf "- {port: %v, protocol: TCP}\n" $port -}}
+        {{- if and ( index $innerdict "istcp" ) ( or ( ne $serviceType "LoadBalancer" ) ( eq $serviceProto "TCP" ) ) -}}
+            {{- printf "- {port: %v, protocol: TCP, name: tcp-dns }\n" $port -}}
         {{- end -}}
     {{- end -}}
 {{- end -}}
@@ -96,6 +100,7 @@ Generate the list of ports automatically from the server definitions
         {{- range .zones -}}
             {{- if has (default "" .scheme) (list "dns://") -}}
                 {{- $innerdict := set $innerdict "isudp" true -}}
+                {{- $innerdict := set $innerdict "istcp" true -}}
             {{- end -}}
 
             {{- if has (default "" .scheme) (list "tls://" "grpc://") -}}
@@ -106,6 +111,7 @@ Generate the list of ports automatically from the server definitions
         {{/* If none of the zones specify scheme, default to UDP (CoreDNS defaults to dns://) */}}
         {{- if and (not (index $innerdict "istcp")) (not (index $innerdict "isudp")) -}}
             {{- $innerdict := set $innerdict "isudp" true -}}
+            {{- $innerdict := set $innerdict "istcp" true -}}
         {{- end -}}
 
         {{/* Write the dict back into the outer dict */}}
