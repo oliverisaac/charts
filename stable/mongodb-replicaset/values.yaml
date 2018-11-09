@@ -57,6 +57,9 @@ securityContext:
   fsGroup: 999
   runAsNonRoot: true
 
+init:
+  resources: {}
+
 resources: {}
 # limits:
 #   cpu: 500m
@@ -102,6 +105,8 @@ service:
     # You can add a FQDN which resolves to the load balancer IP. This will be added to certs if you're doing SSL
     hostname: ""
 
+
+terminationGracePeriodSeconds: 30
 
 tls:
   # Enable or disable MongoDB TLS support
