@@ -22,7 +22,7 @@ Generate the list of ports automatically from the server definitions
     {{/* Set ports to be an empty dict */}}
     {{- $ports := dict -}}
     {{- $serviceType := .Values.service.type -}}
-    {{- $serviceProto := .Values.serviceProtocol -}}
+    {{- $serviceProto := .Values.service.protocol -}}
     {{/* Iterate through each of the server blocks */}}
     {{- range .Values.servers -}}
         {{/* Capture port to avoid scoping awkwardness */}}

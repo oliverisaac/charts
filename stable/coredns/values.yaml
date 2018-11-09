@@ -20,7 +20,12 @@ resources:
 serviceType: "ClusterIP"
 
 service:
-# clusterIP: ""
+  clusterIP: ""
+  loadBalancerIP: ""
+  type: "ClusterIP"
+  # Set the protocol if using type LoadBalancer
+  # type: "LoadBalancer"
+  # protocol: "UDP" 
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "9153"
