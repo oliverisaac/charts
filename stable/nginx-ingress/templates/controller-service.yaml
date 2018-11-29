@@ -4,18 +4,19 @@ If you do this, then you'll end up with two services both sharing the same IP an
 The limitation of LoadBalancers that do not support mixed protocols on the same port still exists. (e.g.: udp/53, tcp/53 will not work )
 */ -}}
 # Getting protocols
+{{- /* We first default to a mixed protocol service. Then if it's a load balancer we make two services instead */ -}}
 {{- $options := dict "makeSvc" false "protocols" ( tuple "mixed" ) -}}
 {{- if eq .Values.controller.service.type "LoadBalancer" -}}
-{{- $_ := set $options "protocols" ( tuple "udp" "tcp" ) -}}
+  {{- $_ := set $options "protocols" ( tuple "udp" "tcp" ) -}}
 {{- end -}}
 {{- range $proto := $options.protocols -}}
-{{- if eq $proto "mixed" -}}
-{{- $_ := set $options "makeSvc" true -}}
-{{- else if and ( eq $proto "tcp" ) ( or ( $.Values.tcp ) ( $.Values.controller.service.enableHttp ) ( $.Values.controller.service.enableHttps ) ) -}}
-{{- $_ := set $options "makeSvc" true -}}
-{{- else if and ( eq $proto "udp" ) ( values ( pick $.Values $proto ) ) -}}
-{{- $_ := set $options "makeSvc" true -}}
-{{- end -}}
+  {{- if eq $proto "mixed" -}}
+    {{- $_ := set $options "makeSvc" true -}}
+  {{- else if and ( eq $proto "tcp" ) ( or ( $.Values.tcp ) ( $.Values.controller.service.enableHttp ) ( $.Values.controller.service.enableHttps ) ) -}}
+    {{- $_ := set $options "makeSvc" true -}}
+  {{- else if and ( eq $proto "udp" ) ( $.Values.udp ) -}}
+    {{- $_ := set $options "makeSvc" true -}}
+  {{- end -}}
 # Make service is: {{ $options.makeSvc }}
 {{- if $options.makeSvc }}
 apiVersion: v1
