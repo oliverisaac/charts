@@ -119,6 +119,8 @@ spec:
               {{- else }}
               value: {{ template "mongodb-replicaset.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}
               {{- end }}
+            - name: TIMEOUT
+              value: "{{ .Values.init.timeout }}"
           {{- if .Values.auth.enabled }}
             - name: AUTH
               value: "true"

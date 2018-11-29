@@ -1,4 +1,4 @@
-# A headless service to create DNS records
+# A headless service to create DNS records for discovery purposes. Use the -client service to connect applications
 apiVersion: v1
 kind: Service
 metadata:
@@ -23,11 +23,7 @@ spec:
   ports:
     - name: mongodb
       port: {{ .Values.port }}
-{{- if .Values.metrics.enabled }}
-    - name: metrics
-      port: {{ .Values.metrics.port }}
-      targetPort: metrics
-{{- end }}
+  publishNotReadyAddresses: true
   selector:
     app: {{ template "mongodb-replicaset.name" . }}
     release: {{ .Release.Name }}
