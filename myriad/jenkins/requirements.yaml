@@ -1,0 +1,4 @@
+dependencies:
+- name: jenkins
+  version: "0.19.1"
+  repository: "file://../jenkins"

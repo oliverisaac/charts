@@ -1,0 +1,6 @@
+dependencies:
+- name: jenkins
+  repository: file://../jenkins
+  version: 0.19.1
+digest: sha256:5c3fa7c03d39d1b772b262726282834d21e2c82b26821a76cd6e7b197fe8724a
+generated: 2018-10-16T14:55:57.84005-05:00

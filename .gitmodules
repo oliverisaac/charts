@@ -1,0 +1,3 @@
+[submodule "myriad/kubernetes-namespace-nodeselector"]
+	path = myriad/kubernetes-namespace-nodeselector
+	url = git@bitbucket.org:myriadmobile/kubernetes-namespace-nodeselector.git
