@@ -25,18 +25,7 @@ data:
     {{- end }}
     {{- end }}
 
-    {{- if .Values.ingressX509.enabled }}
-    {
-      echo "default:"
-      echo "  apiPort: 8085"
-      echo "  legacyServerPort: 8084"
-    }
-
-    {{- end }}
-
-    echo "You need to run: $HAL_COMMAND deploy apply" >&2
     $HAL_COMMAND deploy apply
-    sleep 1000 || true
   clean.sh: |
     export HAL_COMMAND='hal --daemon-endpoint http://{{ template "spinnaker.fullname" . }}-halyard:8064'
     $HAL_COMMAND deploy clean -q

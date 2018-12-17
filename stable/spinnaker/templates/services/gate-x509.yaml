@@ -1,4 +1,4 @@
-{{- if .Values.ingressX509.enabled }}
+{{- if .Values.x509.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -6,15 +6,23 @@ metadata:
     app: spin
     cluster: spin-gate
   name: spin-gate-x509
+  annotations:
+{{ toYaml .Values.x509.service.annotations | indent 4 }}
 spec:
   externalTrafficPolicy: Cluster
+  {{- if .Values.x509.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.x509.service.loadBalancerIP }}
+  {{- end }}
+  {{- if .Values.x509.service.clusterIP }}
+  clusterIP: {{ .Values.x509.service.clusterIP }}
+  {{- end }}
   ports:
-  - port: 8443
+  - port: 443
     protocol: TCP
-    targetPort: 8443
+    targetPort: {{ .Values.x509.service.targetPort }}
   selector:
     app: spin
     cluster: spin-gate
   sessionAffinity: None
-  type: NodePort
+  type: {{ .Values.x509.service.type }}
 {{- end }}
