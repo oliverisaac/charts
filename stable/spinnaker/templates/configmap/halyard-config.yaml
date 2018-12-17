@@ -25,7 +25,18 @@ data:
     {{- end }}
     {{- end }}
 
+    {{- if .Values.ingressX509.enabled }}
+    {
+      echo "default:"
+      echo "  apiPort: 8085"
+      echo "  legacyServerPort: 8084"
+    }
+
+    {{- end }}
+
+    echo "You need to run: $HAL_COMMAND deploy apply" >&2
     $HAL_COMMAND deploy apply
+    sleep 1000 || true
   clean.sh: |
     export HAL_COMMAND='hal --daemon-endpoint http://{{ template "spinnaker.fullname" . }}-halyard:8064'
     $HAL_COMMAND deploy clean -q
@@ -108,8 +119,10 @@ data:
                 --context {{ $context }} {{ if not $.Values.kubeConfig.enabled }}--service-account true{{ end }} \
                 {{ if $.Values.kubeConfig.enabled }}--kubeconfig-file /opt/kube/{{ $.Values.kubeConfig.secretKey }}{{ end }} --omit-namespaces=kube-system,kube-public --provider-version v2
     {{- end }}
+    {{ if .Values.kubeConfig.deploymentContext }}
     $HAL_COMMAND config deploy edit --account-name {{ .Values.kubeConfig.deploymentContext }} --type distributed \
                            --location {{ .Release.Namespace }}
+    {{- end }}
     # Use Deck to route to Gate
     $HAL_COMMAND config security api edit --no-validate --override-base-url /gate
     {{- range $index, $feature := .Values.spinnakerFeatureFlags }}

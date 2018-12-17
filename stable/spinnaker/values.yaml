@@ -83,6 +83,18 @@ ingressGate:
   #    hosts:
   #      - domain.com
 
+ingressX509:
+  enabled: false
+  # host: gate.spinnaker.example.org
+  # annotations:
+    # ingress.kubernetes.io/ssl-redirect: 'true'
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  # tls:
+  #  - secretName: -tls
+  #    hosts:
+  #      - domain.com
+
 # spinnakerFeatureFlags is a list of Spinnaker feature flags to enable
 # Ref: https://www.spinnaker.io/reference/halyard/commands/#hal-config-features-edit
 # spinnakerFeatureFlags:

@@ -1,0 +1,20 @@
+{{- if .Values.ingressX509.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: spin
+    cluster: spin-gate
+  name: spin-gate-x509
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: spin
+    cluster: spin-gate
+  sessionAffinity: None
+  type: NodePort
+{{- end }}

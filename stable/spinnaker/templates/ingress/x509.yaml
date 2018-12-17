@@ -1,0 +1,25 @@
+{{- if .Values.ingressX509.enabled }}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+{{- if .Values.ingressX509.annotations }}
+  annotations:
+{{ toYaml .Values.ingressX509.annotations | indent 4 }}
+{{- end }}
+  name: {{ template "spinnaker.fullname" . }}-x509
+  labels:
+{{ include "spinnaker.standard-labels" . | indent 4 }}
+spec:
+  rules:
+  - host: {{ .Values.ingressX509.host | quote }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: spin-gate-x509
+          servicePort: 8443
+{{- if .Values.ingressX509.tls }}
+  tls:
+{{ toYaml .Values.ingressX509.tls | indent 4 }}
+{{- end }}
+{{- end }}
