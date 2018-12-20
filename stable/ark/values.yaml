@@ -1,13 +1,13 @@
 image:
   repository: gcr.io/heptio-images/ark
-  tag: v0.9.1
+  tag: v0.10.0
   pullPolicy: IfNotPresent
 
 # A docker image with kubectl installed
 kubectl:
   image:
     repository: claranet/gcloud-kubectl-docker
-    tag: 1.0.0
+    tag: v1.13.1-1.3.2
     pullPolicy: IfNotPresent
 
 # Only kube2iam: change the AWS_ACCOUNT_ID and HEPTIO_ARK_ROLE_NAME
@@ -41,8 +41,8 @@ configuration:
   #    apiTimeout:
 
   backupStorageProvider:
-    name:
-    bucket:
+    name: file
+    bucket: "default"
     config: {}
     #  region:
     #  s3ForcePathStyle:
@@ -54,8 +54,50 @@ configuration:
   scheduleSyncPeriod: 1m
   resourcePriorities: []
   restoreOnlyMode: false
+  storageLocations:
+    - name: local-backups
+      config: {}
+      provider: "file"
+      bucket: "backups"
+      prefix: ""
+    - name: local-restores
+      config: {}
+      provider: "file"
+      bucket: "restores"
+      prefix: ""
 
 credentials:
   existingSecret:
   useSecret: true
   secretContents: {}
+
+# You can use these extend options to add sidecars to perform additional operations. Enviornment, configmaps, secrets, and empty dirs are provided to help with that
+extend:
+  # Environment variables to be set in the main ark container
+  env: []
+    # - name: ARK_FILE_OBJECT_STORE_ROOT
+    #   value: /ark-data
+  # An array of configmaps to be mounted in the main ark container.
+  # You can reference these as volumeMounts in your sidecars
+  configMaps: []
+    #   - name: example-configmap
+    #     path: /example
+    #     data: { script.sh: echo hello world }
+  # An array of secrets to be mounted in the main ark container.
+  # You can reference these as volumeMounts in your sidecars
+  secrets: []
+    # - name: example-secret
+    #   path: /secrets
+    #   data: { password: aHVudGVyMgo= }
+  # Create emptyDir volumes that will be mounted in the container.
+  # You can reference these in your sidecars to help with data sharing between containers.
+  emptyDirs: []
+    # - name: ark-data
+    #   path: /ark-data
+  # An array of sidecars to be added to the pod. Must contain full container definition
+  sidecars: []
+  # Plugins to be added as initcontainers.
+  plugins: []
+    # - name: ark-example-plugins
+    #   image: oliverisaac/ark-example-plugins:latest
+    #   imagePullPolicy: Always
