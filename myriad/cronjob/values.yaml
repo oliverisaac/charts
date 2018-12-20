@@ -1,0 +1,73 @@
+# Default values for kube-ns-nodeselector.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: alpine
+  tag: latest
+  pullPolicy: IfNotPresent
+
+command:
+  - "/bin/bash"
+  - "/start.sh"
+
+runAt: "12 2 * * *"
+
+rbac:
+  # If true, create & use RBAC resources
+  create: false
+  # Ignored if rbac.create is true
+  serviceAccountName: default
+
+nameOverride: ""
+fullnameOverride: ""
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# You can use these extend options to add sidecars to perform additional operations. Enviornment, configmaps, secrets, and empty dirs are provided to help with that
+
+# Environment variables to be set in the main ark container
+env: []
+  # - name: ARK_FILE_OBJECT_STORE_ROOT
+  #   value: /ark-data
+
+# An array of configmaps to be mounted in the main ark container.
+# You can reference these as volumeMounts in your sidecars
+configMaps: []
+  #   - name: example-configmap
+  #     path: /example
+  #     data: { script.sh: echo hello world }
+
+# An array of secrets to be mounted in the main ark container.
+# You can reference these as volumeMounts in your sidecars
+secrets: []
+  # - name: example-secret
+  #   path: /secrets
+  #   data: { password: aHVudGVyMgo= }
+
+# Create emptyDir volumes that will be mounted in the container.
+# You can reference these in your sidecars to help with data sharing between containers.
+emptyDirs: []
+  # - name: ark-data
+  #   path: /ark-data
+
+# An array of sidecars to be added to the pod. Must contain full container definition
+sidecars: []
