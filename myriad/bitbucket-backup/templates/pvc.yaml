@@ -1,0 +1,15 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "cronjob.fullname" . }}-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.pvc.size | quote }}
+{{- if .Values.pvc.className }}
+  storageClassName: {{ .Values.pvc.className }}
+{{- else }}
+  storageClassName: standard
+{{- end }}

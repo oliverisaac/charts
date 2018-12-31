@@ -1,0 +1,17 @@
+{{- if .Values.configMaps }}
+{{- range $cm := .Values.configMaps }}
+{{- if $cm.data }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $cm.name }}
+  labels:
+    chart: {{ template "cronjob.chart" $ }}
+    heritage: {{ $.Release.Service }}
+    release: {{ $.Release.Name }}
+    app: {{ template "cronjob.name" $ }}
+data:
+{{ toYaml $cm.data | indent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}
