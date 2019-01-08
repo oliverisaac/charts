@@ -118,6 +118,7 @@ ConsulConfig: []
 uiIngress:
   enabled: false
   annotations: {}
+  labels: {}
   hosts: []
   tls: {}
 
